@@ -104,7 +104,7 @@ def amplify_signal(signal, f):
 
 
 def shift_signal(signal, k):
-    return [(s[0] + k, s[1]) for s in signal]
+    return [(s[0] - k, s[1]) for s in signal]
 
 
 def reverse_signal(signal):
@@ -316,20 +316,6 @@ class DSP:
         self.sampling_freq_entry = ttk.Entry(self.control_frame2)
         self.sampling_freq_entry.grid(row=1, column=8, padx=5, pady=5, sticky="w")
 
-        # """ Update the values in the text boxes """
-        # def update_text_boxes(self, amplitude, phase_shift, analog_freq, sampling_freq):
-        #     self.amplitude_entry.delete(0, tk.END)
-        #     self.amplitude_entry.insert(0, str(amplitude))
-
-        #     self.phase_shift_entry.delete(0, tk.END)
-        #     self.phase_shift_entry.insert(0, str(phase_shift))
-
-        #     self.analog_freq_entry.delete(0, tk.END)
-        #     self.analog_freq_entry.insert(0, str(analog_freq))
-
-        #     self.sampling_freq_entry.delete(0, tk.END)
-        #     self.sampling_freq_entry.insert(0, str(sampling_freq))
-
         self.signal_data = []
         self.current_canvas = None
         self.current_canvas_left = None
@@ -484,27 +470,6 @@ class DSP:
             phase_shift = float(self.phase_shift_entry.get())
             analog_freq = float(self.analog_freq_entry.get())
             sampling_freq = float(self.sampling_freq_entry.get())
-            # amplitude = float(
-            #     simpledialog.askstring(
-            #         "Input", "Enter Amplitude (A):", parent=self.root
-            #     )
-            # )
-            # phase_shift = float(
-            #     simpledialog.askstring(
-            #         "Input", "Enter Phase Shift (θ, in radians):", parent=self.root
-            #     )
-            # )
-            # analog_freq = float(
-            #     simpledialog.askstring(
-            #         "Input", "Enter Analog Frequency (fₐ, in Hz):", parent=self.root
-            #     )
-            # )
-            # sampling_freq = float(
-            #     simpledialog.askstring(
-            #         "Input", "Enter Sampling Frequency (fₛ, in Hz):", parent=self.root
-            #     )
-            # )
-
             # Nyquist Sampling Theorem check
             if sampling_freq < 2 * analog_freq:
                 messagebox.showerror(
