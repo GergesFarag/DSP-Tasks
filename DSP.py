@@ -2,6 +2,7 @@ import tkinter as tk  # GUI Library
 from tkinter import ttk  # Tab Org.
 from tkinter import filedialog, messagebox, simpledialog  # Reading / Writing / Inputs
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg  # Figures
+from scipy.interpolate import CubicSpline
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -35,7 +36,8 @@ def display_continuous(signal, frame):
     fig, ax = plt.subplots(figsize=(8, 5))
     # continuous
     x_fine = np.linspace(min(x_vals), max(x_vals), 100)
-    y_fine = np.interp(x_fine, x_vals, y_vals)
+    spline = CubicSpline(x_vals, y_vals)
+    y_fine = spline(x_fine) 
     ax.plot(x_fine, y_fine, label="Interpolated Signal")
     ax.scatter(x_vals, y_vals, color="red", label="Sample Points")
     ax.set_title("Continuous Signal")
