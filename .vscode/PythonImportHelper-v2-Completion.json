@@ -1,0 +1,177 @@
+[
+    {
+        "label": "tkinter",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "tkinter",
+        "description": "tkinter",
+        "detail": "tkinter",
+        "documentation": {}
+    },
+    {
+        "label": "ttk",
+        "importPath": "tkinter",
+        "description": "tkinter",
+        "isExtraImport": true,
+        "detail": "tkinter",
+        "documentation": {}
+    },
+    {
+        "label": "filedialog",
+        "importPath": "tkinter",
+        "description": "tkinter",
+        "isExtraImport": true,
+        "detail": "tkinter",
+        "documentation": {}
+    },
+    {
+        "label": "messagebox",
+        "importPath": "tkinter",
+        "description": "tkinter",
+        "isExtraImport": true,
+        "detail": "tkinter",
+        "documentation": {}
+    },
+    {
+        "label": "simpledialog",
+        "importPath": "tkinter",
+        "description": "tkinter",
+        "isExtraImport": true,
+        "detail": "tkinter",
+        "documentation": {}
+    },
+    {
+        "label": "FigureCanvasTkAgg",
+        "importPath": "matplotlib.backends.backend_tkagg",
+        "description": "matplotlib.backends.backend_tkagg",
+        "isExtraImport": true,
+        "detail": "matplotlib.backends.backend_tkagg",
+        "documentation": {}
+    },
+    {
+        "label": "matplotlib.pyplot",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "matplotlib.pyplot",
+        "description": "matplotlib.pyplot",
+        "detail": "matplotlib.pyplot",
+        "documentation": {}
+    },
+    {
+        "label": "numpy",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "numpy",
+        "description": "numpy",
+        "detail": "numpy",
+        "documentation": {}
+    },
+    {
+        "label": "DSP",
+        "kind": 6,
+        "importPath": "DSP",
+        "description": "DSP",
+        "peekOfCode": "class DSP:\n    def __init__(self, root):\n        self.root = root\n        self.root.title(\"DSP\")\n        self.root.geometry(\"1000x650\")\n        self.root.configure(bg=\"#f0f0f0\")\n        # Create Notebook to contain tabs\n        self.notebook = ttk.Notebook(self.root)\n        self.notebook.pack(fill=tk.BOTH, expand=True)\n        # initialize my TAB",
+        "detail": "DSP",
+        "documentation": {}
+    },
+    {
+        "label": "load_signal",
+        "kind": 2,
+        "importPath": "DSP",
+        "description": "DSP",
+        "peekOfCode": "def load_signal(file_path):\n    with open(file_path, \"r\") as file:\n        lines = file.readlines()\n        num_samples = int(lines[2].strip())  # like trim() in JS\n        signal_data = [\n            (int(line.split()[0]), int(line.split()[1]))\n            for line in lines[3 : num_samples + 3]\n        ]  # [[(indx1 , val1), ...]]\n    return signal_data\ndef display_discrete(signal, frame):",
+        "detail": "DSP",
+        "documentation": {}
+    },
+    {
+        "label": "display_discrete",
+        "kind": 2,
+        "importPath": "DSP",
+        "description": "DSP",
+        "peekOfCode": "def display_discrete(signal, frame):\n    x_vals, y_vals = zip(*signal)\n    fig, ax = plt.subplots(figsize=(8, 5))\n    ax.stem(x_vals, y_vals)\n    ax.set_title(\"Digital Signal Display\", fontsize=14)\n    ax.set_xlabel(\"Sample Index\", fontsize=12)\n    ax.set_ylabel(\"Signal Value\", fontsize=12)\n    ax.grid(True)\n    ax.legend()\n    return FigureCanvasTkAgg(fig, frame)",
+        "detail": "DSP",
+        "documentation": {}
+    },
+    {
+        "label": "display_continuous",
+        "kind": 2,
+        "importPath": "DSP",
+        "description": "DSP",
+        "peekOfCode": "def display_continuous(signal, frame):\n    x_vals, y_vals = zip(*signal)\n    fig, ax = plt.subplots(figsize=(8, 5))\n    # continuous\n    x_fine = np.linspace(min(x_vals), max(x_vals), 100)\n    y_fine = np.interp(x_fine, x_vals, y_vals)\n    ax.plot(x_fine, y_fine, label=\"Interpolated Signal\")\n    ax.scatter(x_vals, y_vals, color=\"red\", label=\"Sample Points\")\n    ax.set_title(\"Continuous Signal\")\n    ax.set_xlabel(\"Sample Index\")",
+        "detail": "DSP",
+        "documentation": {}
+    },
+    {
+        "label": "add_signals",
+        "kind": 2,
+        "importPath": "DSP",
+        "description": "DSP",
+        "peekOfCode": "def add_signals(signal1, signal2):\n    signal = []\n    results_dict = {}\n    for entry in signal1:\n        if len(entry) == 2:\n            x, y = entry\n            results_dict[x] = y\n            # signal.append([x,results_dict[x]])\n    for entry in signal2:\n        if len(entry) == 2:  # Ensure there are two values to unpack",
+        "detail": "DSP",
+        "documentation": {}
+    },
+    {
+        "label": "subtract_signals",
+        "kind": 2,
+        "importPath": "DSP",
+        "description": "DSP",
+        "peekOfCode": "def subtract_signals(signal1, signal2):\n    signal = []\n    results_dict = {}\n    for entry in signal1:\n        if len(entry) == 2:\n            x, y = entry\n            results_dict[x] = y\n            # signal.append([x,results_dict[x]])\n    for entry in signal2:\n        if len(entry) == 2:  # Ensure there are two values to unpack",
+        "detail": "DSP",
+        "documentation": {}
+    },
+    {
+        "label": "amplify_signal",
+        "kind": 2,
+        "importPath": "DSP",
+        "description": "DSP",
+        "peekOfCode": "def amplify_signal(signal, f):\n    return [(s[0], s[1] * f) for s in signal]\ndef shift_signal(signal, k):\n    return [(s[0] + k, s[1]) for s in signal]\ndef reverse_signal(signal):\n    return [(-s[0], s[1]) for s in signal]\ndef save_signal(signal, file_path):\n    with open(file_path, \"w\") as file:\n        file.write(f\"0\\n0\\n{len(signal)}\\n\")\n        for index, value in signal:",
+        "detail": "DSP",
+        "documentation": {}
+    },
+    {
+        "label": "shift_signal",
+        "kind": 2,
+        "importPath": "DSP",
+        "description": "DSP",
+        "peekOfCode": "def shift_signal(signal, k):\n    return [(s[0] + k, s[1]) for s in signal]\ndef reverse_signal(signal):\n    return [(-s[0], s[1]) for s in signal]\ndef save_signal(signal, file_path):\n    with open(file_path, \"w\") as file:\n        file.write(f\"0\\n0\\n{len(signal)}\\n\")\n        for index, value in signal:\n            file.write(f\"{index} {value}\\n\")\n### GUI Preparation ###",
+        "detail": "DSP",
+        "documentation": {}
+    },
+    {
+        "label": "reverse_signal",
+        "kind": 2,
+        "importPath": "DSP",
+        "description": "DSP",
+        "peekOfCode": "def reverse_signal(signal):\n    return [(-s[0], s[1]) for s in signal]\ndef save_signal(signal, file_path):\n    with open(file_path, \"w\") as file:\n        file.write(f\"0\\n0\\n{len(signal)}\\n\")\n        for index, value in signal:\n            file.write(f\"{index} {value}\\n\")\n### GUI Preparation ###\nclass DSP:\n    def __init__(self, root):",
+        "detail": "DSP",
+        "documentation": {}
+    },
+    {
+        "label": "save_signal",
+        "kind": 2,
+        "importPath": "DSP",
+        "description": "DSP",
+        "peekOfCode": "def save_signal(signal, file_path):\n    with open(file_path, \"w\") as file:\n        file.write(f\"0\\n0\\n{len(signal)}\\n\")\n        for index, value in signal:\n            file.write(f\"{index} {value}\\n\")\n### GUI Preparation ###\nclass DSP:\n    def __init__(self, root):\n        self.root = root\n        self.root.title(\"DSP\")",
+        "detail": "DSP",
+        "documentation": {}
+    },
+    {
+        "label": "root",
+        "kind": 5,
+        "importPath": "DSP",
+        "description": "DSP",
+        "peekOfCode": "root = tk.Tk()\napp = DSP(root)\nroot.mainloop()",
+        "detail": "DSP",
+        "documentation": {}
+    },
+    {
+        "label": "app",
+        "kind": 5,
+        "importPath": "DSP",
+        "description": "DSP",
+        "peekOfCode": "app = DSP(root)\nroot.mainloop()",
+        "detail": "DSP",
+        "documentation": {}
+    }
+]

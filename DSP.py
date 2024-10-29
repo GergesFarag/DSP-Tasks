@@ -13,7 +13,7 @@ def load_signal(file_path):
         lines = file.readlines()
         num_samples = int(lines[2].strip())  # like trim() in JS
         signal_data = [
-            (int(line.split()[0]), int(line.split()[1]))
+            (int(line.split()[0]), float(line.split()[1]))
             for line in lines[3 : num_samples + 3]
         ]  # [[(indx1 , val1), ...]]
     return signal_data
@@ -37,7 +37,7 @@ def display_continuous(signal, frame):
     # continuous
     x_fine = np.linspace(min(x_vals), max(x_vals), 100)
     spline = CubicSpline(x_vals, y_vals)
-    y_fine = spline(x_fine) 
+    y_fine = spline(x_fine)
     ax.plot(x_fine, y_fine, label="Interpolated Signal")
     ax.scatter(x_vals, y_vals, color="red", label="Sample Points")
     ax.set_title("Continuous Signal")
@@ -120,9 +120,40 @@ def save_signal(signal, file_path):
             file.write(f"{index} {value}\n")
 
 
+# task 3
+
+# Function to find the index of the value with the least distance
+def find_closest_index(target, values):
+    closest_index = min(range(len(values)), key=lambda i: abs(target - values[i]))
+    closest_value = values[closest_index]
+    return closest_index, closest_value
+
+def quantize_signal(signal, num_levels, num_bits):
+    x_vals, y_vals = zip(*signal)
+    min_val, max_val = min(y_vals), max(y_vals)
+    delta = (max_val - min_val) / (num_levels)
+    
+    #calc mid points
+    mid_points=[]
+    temp1 = min_val 
+    for x in range(num_levels):
+        temp2 = (temp1 + delta) 
+        mid_points.append(round((temp1 + temp2) / 2 ,3))
+        temp1 = temp2
+    # print(mid_points)
+    
+    #quantize
+    yq = []
+    for y in y_vals:
+        closest_index , closest_value = find_closest_index(y, mid_points)
+        # print("Index of value closest to", y, "is", closest_index , closest_value)
+        binary_index = format(closest_index, f'0{num_bits}b')  # Format to binary with leading zeros
+        yq_error = y - closest_value 
+        yq.append((binary_index,closest_value))
+        # print(yq)
+    return yq
+    
 ### GUI Preparation ###
-
-
 class DSP:
     def __init__(self, root):
         self.root = root
@@ -135,7 +166,7 @@ class DSP:
         self.notebook.pack(fill=tk.BOTH, expand=True)
         # initialize my TAB
         self.task1 = tk.Frame(self.notebook, bg="#f0f0f0")
-        self.notebook.add(self.task1, text="DSP Task #1")
+        self.notebook.add(self.task1, text="Task #1")
 
         # frames in the signal tab
         self.plot_frame = tk.Frame(self.task1, bg="#ffffff", bd=2)
@@ -318,10 +349,66 @@ class DSP:
         self.sampling_freq_entry = ttk.Entry(self.control_frame2)
         self.sampling_freq_entry.grid(row=1, column=8, padx=5, pady=5, sticky="w")
 
+        # Task 3: Quantization Tab
+        self.task3 = tk.Frame(self.notebook, bg="#f0f0f0")
+        self.notebook.add(self.task3, text="Task #3: Quantization")
+
+        self.quantize_plot_frame = tk.Frame(self.task3, bg="#ffffff", bd=2)
+        self.quantize_plot_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+        self.quantize_control_frame = tk.Frame(self.task3, bg="#f0f0f0")
+        self.quantize_control_frame.pack(side=tk.BOTTOM, padx=10, pady=10)
+
+        self.load_signal_button = tk.Button(
+            self.quantize_control_frame,
+            text="Load Signal",
+            command=self.load_signal,
+            width=20,
+            bg="#ab003c",
+            fg="white",
+            relief=tk.FLAT,
+        )
+        self.load_signal_button.grid(row=0, column=0, padx=5, pady=5)
+
+        # Entry fields for bits and levels
+        tk.Label(self.quantize_control_frame, text="Enter Levels:", bg="#f0f0f0").grid(
+            row=0, column=1, padx=5, pady=5
+        )
+        self.levels_entry = tk.Entry(self.quantize_control_frame, width=10)
+        self.levels_entry.grid(row=0, column=2, padx=5, pady=5)
+
+        tk.Label(self.quantize_control_frame, text="Enter Bits:", bg="#f0f0f0").grid(
+            row=0, column=3, padx=5, pady=5
+        )
+        self.bits_entry = tk.Entry(self.quantize_control_frame, width=10)
+        self.bits_entry.grid(row=0, column=4, padx=5, pady=5)
+
+        self.quantize_button = tk.Button(
+            self.quantize_control_frame,
+            text="Quantize Signal",
+            command=self.quantize_signal,
+            width=20,
+            bg="#ffc107",
+            relief=tk.FLAT,
+        )
+        self.quantize_button.grid(row=0, column=6, padx=5, pady=5)
+
+        self.save_button = tk.Button(
+            self.quantize_control_frame,
+            text="Save Signal",
+            width=20,
+            bg="#ab003c",
+            fg="white",
+            command=self.save_signal,
+            relief=tk.FLAT,
+        )
+        self.save_button.grid(row=0, column=7, padx=5, pady=5)
+
         self.signal_data = []
         self.current_canvas = None
         self.current_canvas_left = None
         self.current_canvas_right = None
+        self.quantize_control_frame = None
 
     ### Preview Data In My GUI ###
     def update_plot(self):
@@ -428,7 +515,7 @@ class DSP:
     def update_plots(self):
         self.clear_plots()
         if len(self.signal_data) >= 1:
-            if(len(self.signal_data)>2):
+            if len(self.signal_data) > 2:
                 self.signal_data.remove(self.signal_data[0])
             if self.radio_var.get() == "Discrete":
                 self.current_canvas_left = display_discrete(
@@ -499,6 +586,84 @@ class DSP:
         except (ValueError, TypeError):
             messagebox.showerror("Error", "Invalid input. Please enter numeric values.")
 
+    # task 3
+    def quantize_signal(self):
+        if self.signal_data[-1]:
+            levels = self.levels_entry.get()
+            bits = self.bits_entry.get()
+
+            # Validate input and calculate levels if needed
+            if levels and not bits:
+                try:
+                    num_levels = int(levels)
+                    if num_levels < 2:
+                        messagebox.showerror(
+                            "Error", "Number of levels must be 2 or more."
+                        )
+                        return
+                except ValueError:
+                    messagebox.showerror(
+                        "Error", "Invalid levels input. Enter an integer."
+                    )
+                    return
+
+            elif bits and not levels:
+                try:
+                    num_bits = int(bits)
+                    if num_bits < 1:
+                        messagebox.showerror(
+                            "Error", "Number of bits must be 1 or more."
+                        )
+                        return
+                    num_levels = 2**num_bits
+                except ValueError:
+                    messagebox.showerror(
+                        "Error", "Invalid bits input. Enter an integer."
+                    )
+                    return
+
+            elif levels and bits:
+                try:
+                    num_levels = int(levels)
+                    num_bits = int(bits)
+                    if num_levels != 2**num_bits:
+                        messagebox.showerror("Error", "Levels must equal 2^(Bits).")
+                        return
+                except ValueError:
+                    messagebox.showerror("Error", "Invalid input in levels or bits.")
+                    return
+            else:
+                messagebox.showerror("Error", "Please enter either levels or bits.")
+                return
+
+            self.signal_data[-1] = quantize_signal(
+                self.signal_data[-1], num_levels, num_bits
+            )
+            self.clear_plot()
+            display_discrete(self.signal_data[-1], self.quantize_control_frame)
+
+    def create_quantization_table(data):
+        # Set up a Treeview widget for the table
+        columns = ("col1", "col2", "col3", "col4", "col5")
+        tree = ttk.Treeview(root, columns=columns, show="headings")
+
+        # Define column headers
+        tree.heading("col1", text="Column 1")
+        tree.heading("col2", text="Column 2")
+        tree.heading("col3", text="Column 3")
+        tree.heading("col4", text="Column 4")
+        tree.heading("col5", text="Column 5")
+
+        # Define column widths
+        for col in columns:
+            tree.column(col, width=100, anchor="center")
+
+        # Insert data into the table
+        for row in data:
+            tree.insert("", "end", values=row)
+
+        # Add the table to the frame
+        tree.pack(fill="both", expand=True)
 
 root = tk.Tk()
 app = DSP(root)
