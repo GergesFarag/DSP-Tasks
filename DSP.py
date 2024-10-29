@@ -121,7 +121,6 @@ def save_signal(signal, file_path):
 
 
 # task 3
-
 # Function to find the index of the value with the least distance
 def find_closest_index(target, values):
     closest_index = min(range(len(values)), key=lambda i: abs(target - values[i]))
@@ -144,14 +143,19 @@ def quantize_signal(signal, num_levels, num_bits):
     
     #quantize
     yq = []
+    yq_error_sqared_acc = 0
+    data = []
     for y in y_vals:
         closest_index , closest_value = find_closest_index(y, mid_points)
         # print("Index of value closest to", y, "is", closest_index , closest_value)
         binary_index = format(closest_index, f'0{num_bits}b')  # Format to binary with leading zeros
-        yq_error = y - closest_value 
+        yq_error = round(y - closest_value,3)
+        yq_error_sqared_acc += round(pow(yq_error,2),3)
         yq.append((binary_index,closest_value))
+        data.append((y,closest_index,binary_index,closest_value,yq_error,round(pow(yq_error,2) , 3)))
         # print(yq)
-    return yq
+    yq_error_sqared_acc *= round((1/9),3)
+    return yq , data , yq_error_sqared_acc
     
 ### GUI Preparation ###
 class DSP:
@@ -383,6 +387,7 @@ class DSP:
         self.bits_entry = tk.Entry(self.quantize_control_frame, width=10)
         self.bits_entry.grid(row=0, column=4, padx=5, pady=5)
 
+
         self.quantize_button = tk.Button(
             self.quantize_control_frame,
             text="Quantize Signal",
@@ -409,6 +414,64 @@ class DSP:
         self.current_canvas_left = None
         self.current_canvas_right = None
         self.quantize_control_frame = None
+
+    def create_quantization_table(self,data,avg_pow):
+        style = ttk.Style()
+        style.theme_use("default")
+        
+        # Style for the Treeview headings
+        style.configure("Treeview.Heading", 
+                        font=("Arial", 12, "bold"), 
+                        background="#4CAF50", 
+                        foreground="white", 
+                        relief="flat")
+        style.map("Treeview.Heading", 
+                background=[('active', '#45A049')])  # Change header color on hover
+        
+        # Style for the Treeview rows
+        style.configure("Treeview", 
+                        font=("Arial", 10),  # Row font
+                        rowheight=25,  # Row height
+                        background="#F0F0F0", 
+                        foreground="black",
+                        fieldbackground="white")  # Table background color
+        
+        # Add row striping
+        style.map("Treeview",
+                background=[("selected", "#4CAF50")],  # Selected row color
+                foreground=[("selected", "white")])
+        style.configure("Treeview", 
+                        rowheight=25)
+        
+        # Set up a Treeview widget for the table
+        columns = ("col1", "col2", "col3", "col4", "col5","col6")
+        tree = ttk.Treeview(self.quantize_plot_frame, columns=columns, show="headings")
+
+        # Define column headers
+        tree.heading("col1", text="y")
+        tree.heading("col2", text="Interval")
+        tree.heading("col3", text="Interval (bin)")
+        tree.heading("col4", text="mid_point")
+        tree.heading("col5", text="yq_error")
+        tree.heading("col6", text="error^2")
+
+        # Define column widths
+        for col in columns:
+            tree.column(col, width=100, anchor="center")
+
+        # Insert data into the table
+        for row in data:
+            tree.insert("", "end", values=row)
+
+        # Add the table to the frame
+        tree.pack(fill="both", expand=True)
+
+        # Create a label with the same style as the headers
+        label = tk.Label(self.quantize_plot_frame, text="Avarage Power: " + str(avg_pow), 
+                        font=("Arial", 12, "bold"), 
+                        background="#F0F0F0", 
+                        foreground="#4CAF50")
+        label.pack(pady=10)  # Add some padding for better spacing
 
     ### Preview Data In My GUI ###
     def update_plot(self):
@@ -636,34 +699,12 @@ class DSP:
                 messagebox.showerror("Error", "Please enter either levels or bits.")
                 return
 
-            self.signal_data[-1] = quantize_signal(
+            self.signal_data[-1] , data , avg_pow = quantize_signal(
                 self.signal_data[-1], num_levels, num_bits
             )
-            self.clear_plot()
-            display_discrete(self.signal_data[-1], self.quantize_control_frame)
-
-    def create_quantization_table(data):
-        # Set up a Treeview widget for the table
-        columns = ("col1", "col2", "col3", "col4", "col5")
-        tree = ttk.Treeview(root, columns=columns, show="headings")
-
-        # Define column headers
-        tree.heading("col1", text="Column 1")
-        tree.heading("col2", text="Column 2")
-        tree.heading("col3", text="Column 3")
-        tree.heading("col4", text="Column 4")
-        tree.heading("col5", text="Column 5")
-
-        # Define column widths
-        for col in columns:
-            tree.column(col, width=100, anchor="center")
-
-        # Insert data into the table
-        for row in data:
-            tree.insert("", "end", values=row)
-
-        # Add the table to the frame
-        tree.pack(fill="both", expand=True)
+            # self.clear_plot()
+            # display_discrete(self.signal_data[-1], self.quantize_control_frame)
+            self.create_quantization_table(data,avg_pow)
 
 root = tk.Tk()
 app = DSP(root)
