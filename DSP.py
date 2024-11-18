@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-### My Logic ###
+### task 1 & 2 ###
 def load_signal(file_path):
     with open(file_path, "r") as file:
         lines = file.readlines()
@@ -127,36 +127,50 @@ def find_closest_index(target, values):
     closest_value = values[closest_index]
     return closest_index, closest_value
 
+
 def quantize_signal(signal, num_levels, num_bits):
     x_vals, y_vals = zip(*signal)
     min_val, max_val = min(y_vals), max(y_vals)
     delta = (max_val - min_val) / (num_levels)
-    
-    #calc mid points
-    mid_points=[]
-    temp1 = min_val 
+
+    # calc mid points
+    mid_points = []
+    temp1 = min_val
     for x in range(num_levels):
-        temp2 = (temp1 + delta) 
-        mid_points.append(round((temp1 + temp2) / 2 ,3))
+        temp2 = temp1 + delta
+        mid_points.append(round((temp1 + temp2) / 2, 3))
         temp1 = temp2
     # print(mid_points)
-    
-    #quantize
+
+    # quantize
     yq = []
     yq_error_sqared_acc = 0
     data = []
     for y in y_vals:
-        closest_index , closest_value = find_closest_index(y, mid_points)
+        closest_index, closest_value = find_closest_index(y, mid_points)
         # print("Index of value closest to", y, "is", closest_index , closest_value)
-        binary_index = format(closest_index, f'0{num_bits}b')  # Format to binary with leading zeros
-        yq_error = round(y - closest_value,3)
-        yq_error_sqared_acc += round(pow(yq_error,2),3)
-        yq.append((binary_index,closest_value))
-        data.append((y,closest_index,binary_index,closest_value,yq_error,round(pow(yq_error,2) , 3)))
+        binary_index = format(
+            closest_index, f"0{num_bits}b"
+        )  # Format to binary with leading zeros
+        yq_error = round(y - closest_value, 3)
+        yq_error_sqared_acc += round(pow(yq_error, 2), 3)
+        yq.append((binary_index, closest_value))
+        data.append(
+            (
+                y,
+                closest_index,
+                binary_index,
+                closest_value,
+                yq_error,
+                round(pow(yq_error, 2), 3),
+            )
+        )
         # print(yq)
-    yq_error_sqared_acc *= round((1/9),3)
-    return yq , data , yq_error_sqared_acc
-    
+    yq_error_sqared_acc *= round((1 / 9), 3)
+    return yq, data, yq_error_sqared_acc
+    ################################################################################################################
+
+
 ### GUI Preparation ###
 class DSP:
     def __init__(self, root):
@@ -172,6 +186,7 @@ class DSP:
         self.task1 = tk.Frame(self.notebook, bg="#f0f0f0")
         self.notebook.add(self.task1, text="Task #1")
 
+        # task 1 GUI
         # frames in the signal tab
         self.plot_frame = tk.Frame(self.task1, bg="#ffffff", bd=2)
         self.plot_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True, padx=10, pady=10)
@@ -256,7 +271,7 @@ class DSP:
         )
         self.reverse_button.grid(row=0, column=6, padx=5, pady=5)
 
-        # Task 2
+        # Task 2 GUI
         self.task2 = tk.Frame(self.notebook, bg="#f0f0f0")
         self.notebook.add(self.task2, text="DSP Task #2")
 
@@ -353,7 +368,7 @@ class DSP:
         self.sampling_freq_entry = ttk.Entry(self.control_frame2)
         self.sampling_freq_entry.grid(row=1, column=8, padx=5, pady=5, sticky="w")
 
-        # Task 3: Quantization Tab
+        # Task 3 GUI: Quantization Tab
         self.task3 = tk.Frame(self.notebook, bg="#f0f0f0")
         self.notebook.add(self.task3, text="Task #3: Quantization")
 
@@ -387,7 +402,6 @@ class DSP:
         self.bits_entry = tk.Entry(self.quantize_control_frame, width=10)
         self.bits_entry.grid(row=0, column=4, padx=5, pady=5)
 
-
         self.quantize_button = tk.Button(
             self.quantize_control_frame,
             text="Quantize Signal",
@@ -409,42 +423,95 @@ class DSP:
         )
         self.save_button.grid(row=0, column=7, padx=5, pady=5)
 
+        # task 4
+        self.task4 = tk.Frame(self.notebook, bg="#f0f0f0")
+        self.notebook.add(self.task4, text="Task #4: Convolution")
+
+        self.convolution_frame = tk.Frame(self.task4, bg="#ffffff", bd=2)
+        self.convolution_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+        self.convolution_frame = tk.Frame(self.task4, bg="#f0f0f0")
+        self.convolution_frame.pack(side=tk.BOTTOM, padx=10, pady=10)
+
+        self.load_signal_button = tk.Button(
+            self.convolution_frame,
+            text="Load Signal",
+            command=self.load_signal,
+            width=20,
+            bg="#ab003c",
+            fg="white",
+            relief=tk.FLAT,
+        )
+        self.load_signal_button.grid(row=0, column=0, padx=5, pady=5)
+
+        self.moving_average_button = tk.Button(
+            self.convolution_frame,
+            text="Moving_Avg",
+            command=self.moving_average,
+            width=20,
+            bg="#ab003c",
+            fg="white",
+            relief=tk.FLAT,
+        )
+        self.moving_average_button.grid(row=0, column=1, padx=5, pady=5)
+
+
+
+        self.save_button = tk.Button(
+            self.convolution_frame,
+            text="Save Signal",
+            width=20,
+            bg="#ab003c",
+            fg="white",
+            command=self.save_signal,
+            relief=tk.FLAT,
+        )
+        self.save_button.grid(row=0, column=7, padx=5, pady=5)
+
         self.signal_data = []
         self.current_canvas = None
         self.current_canvas_left = None
         self.current_canvas_right = None
         self.quantize_control_frame = None
+        self.convolution_frame = None
 
-    def create_quantization_table(self,data,avg_pow):
+    # Quantization Table
+    def create_quantization_table(self, data, avg_pow):
         style = ttk.Style()
         style.theme_use("default")
-        
+
         # Style for the Treeview headings
-        style.configure("Treeview.Heading", 
-                        font=("Arial", 12, "bold"), 
-                        background="#4CAF50", 
-                        foreground="white", 
-                        relief="flat")
-        style.map("Treeview.Heading", 
-                background=[('active', '#45A049')])  # Change header color on hover
-        
+        style.configure(
+            "Treeview.Heading",
+            font=("Arial", 12, "bold"),
+            background="#4CAF50",
+            foreground="white",
+            relief="flat",
+        )
+        style.map(
+            "Treeview.Heading", background=[("active", "#45A049")]
+        )  # Change header color on hover
+
         # Style for the Treeview rows
-        style.configure("Treeview", 
-                        font=("Arial", 10),  # Row font
-                        rowheight=25,  # Row height
-                        background="#F0F0F0", 
-                        foreground="black",
-                        fieldbackground="white")  # Table background color
-        
+        style.configure(
+            "Treeview",
+            font=("Arial", 10),  # Row font
+            rowheight=25,  # Row height
+            background="#F0F0F0",
+            foreground="black",
+            fieldbackground="white",
+        )  # Table background color
+
         # Add row striping
-        style.map("Treeview",
-                background=[("selected", "#4CAF50")],  # Selected row color
-                foreground=[("selected", "white")])
-        style.configure("Treeview", 
-                        rowheight=25)
-        
+        style.map(
+            "Treeview",
+            background=[("selected", "#4CAF50")],  # Selected row color
+            foreground=[("selected", "white")],
+        )
+        style.configure("Treeview", rowheight=25)
+
         # Set up a Treeview widget for the table
-        columns = ("col1", "col2", "col3", "col4", "col5","col6")
+        columns = ("col1", "col2", "col3", "col4", "col5", "col6")
         tree = ttk.Treeview(self.quantize_plot_frame, columns=columns, show="headings")
 
         # Define column headers
@@ -467,10 +534,13 @@ class DSP:
         tree.pack(fill="both", expand=True)
 
         # Create a label with the same style as the headers
-        label = tk.Label(self.quantize_plot_frame, text="Avarage Power: " + str(avg_pow), 
-                        font=("Arial", 12, "bold"), 
-                        background="#F0F0F0", 
-                        foreground="#4CAF50")
+        label = tk.Label(
+            self.quantize_plot_frame,
+            text="Avarage Power: " + str(avg_pow),
+            font=("Arial", 12, "bold"),
+            background="#F0F0F0",
+            foreground="#4CAF50",
+        )
         label.pack(pady=10)  # Add some padding for better spacing
 
     ### Preview Data In My GUI ###
@@ -567,6 +637,8 @@ class DSP:
                 save_signal(current_signal, file_path)
         else:
             messagebox.showwarning("Warning", "No signal to save.")
+
+    #################################### classFunctions ##################################################
 
     # task 2
     def clear_plots(self):
@@ -699,12 +771,37 @@ class DSP:
                 messagebox.showerror("Error", "Please enter either levels or bits.")
                 return
 
-            self.signal_data[-1] , data , avg_pow = quantize_signal(
+            self.signal_data[-1], data, avg_pow = quantize_signal(
                 self.signal_data[-1], num_levels, num_bits
             )
             # self.clear_plot()
             # display_discrete(self.signal_data[-1], self.quantize_control_frame)
-            self.create_quantization_table(data,avg_pow)
+            self.create_quantization_table(data, avg_pow)
+
+    # task 4
+    def moving_average(self):
+        if self.signal_data[-1]:
+            signal = self.signal_data[-1]
+        else:
+            messagebox.showerror("Error", "Load signal first.")
+            return
+        # Initialize the result list
+        window_size = simpledialog.askinteger(
+            "Window Size", "Enter the window size (positive integer):"
+        )
+        size = len(signal) - window_size + 1
+        result = []
+        # Loop through the signal and compute the average for each window
+        for i in range(size):  # type: ignore
+            # Compute the sum of the current window
+            window_sum = 0
+            for j in range(window_size):
+                window_sum += signal[i + j][1]
+            # Compute the average and append to the result
+            result.append((i, round((window_sum / window_size),3)))
+        self.signal_data.append( result)
+        # display_discrete(signal,self.convolution_frame)
+
 
 root = tk.Tk()
 app = DSP(root)
