@@ -427,8 +427,8 @@ class DSP:
         self.task4 = tk.Frame(self.notebook, bg="#f0f0f0")
         self.notebook.add(self.task4, text="Task #4: Convolution")
 
-        self.convolution_frame = tk.Frame(self.task4, bg="#ffffff", bd=2)
-        self.convolution_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        self.plot_frame = tk.Frame(self.task4, bg="#ffffff", bd=2)
+        self.plot_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
         self.convolution_frame = tk.Frame(self.task4, bg="#f0f0f0")
         self.convolution_frame.pack(side=tk.BOTTOM, padx=10, pady=10)
@@ -565,10 +565,10 @@ class DSP:
 
     ### Preview Data In My GUI ###
     def update_plot(self):
-        if self.radio_var.get() == "Discrete":
-            display_discrete(self.signal_data, self.plot_frame)
-        else:
+        if self.radio_var.get() == "Continuous":
             display_continuous(self.signal_data, self.plot_frame)
+        else:
+            display_discrete(self.signal_data, self.plot_frame)
 
     def clear_plot(self):
         if self.current_canvas:
@@ -819,7 +819,11 @@ class DSP:
             # Compute the average and append to the result
             result.append((i, round((window_sum / window_size), 3)))
         self.signal_data.append(result)
-        # display_discrete(signal,self.convolution_frame)
+        self.clear_plot()
+        self.current_canvas = display_discrete(self.signal_data[-1], self.plot_frame)
+        self.current_canvas.get_tk_widget().pack(
+            side=tk.TOP, fill=tk.BOTH, expand=False
+        )
 
     # 2-Derivative
     def first_derivative(self):
@@ -834,17 +838,22 @@ class DSP:
                 continue
             result.append((i - 1, int(signal[i][1] - signal[i - 1][1])))
         self.signal_data.append(result)
+        self.clear_plot()
+        self.current_canvas = display_discrete(self.signal_data[-1], self.plot_frame)
+        self.current_canvas.get_tk_widget().pack(
+            side=tk.TOP, fill=tk.BOTH, expand=False
+        )
 
     # 3- convolution
     def convolve(self):
-        if (len(self.signal_data) >= 2):
+        if len(self.signal_data) >= 2:
             x = self.signal_data[-2]
             h = self.signal_data[-1]
         else:
             messagebox.showerror("Error", "Please Enter two signals minimum!")
 
         lenghth = len(x) + len(h) - 1
-        y =[0] * lenghth
+        y = [0] * lenghth
         res = []
         n = x[0][0] + h[0][0] - 1
         # end = n + lenghth
@@ -854,34 +863,13 @@ class DSP:
             for j in range(len(h)):
                 if i - j >= 0 and i - j < len(x):
                     y[i] += int(x[i - j][1] * h[j][1])
-            res.append((n,y[i]))
-        self.signal_data[-1] = res
-
-
-
-
-    # def convolve(self):
-        # if (len(self.signal_data) >= 2):
-        #     x = self.signal_data[-2]
-        #     h = self.signal_data[-1]
-        # else:
-        #     messagebox.showerror("Error", "Please Enter two signals minimum!")
-        # y = []
-        # lenghth = len(x) + len(h) - 1
-        # n = x[0][0] + h[0][0]
-        # end = n + lenghth
-        # print(end)
-        # for n in range(lenghth):
-        #     z=0
-        #     for k in range(len(h)):
-        #         # if n-k>=0 and n - k < len(x):
-        #             print("n-k:",n-k , x[n - k][1],"k:",k , h[k][1])
-        #             z += x[n - k + x[0][0]-h[0][0]][1] * h[k][1]
-        #             print(z)
-        #     y.append((n,z))  
-        # print(y)
-
-
+            res.append((n, y[i]))
+        self.signal_data.append(res)
+        self.clear_plot()
+        self.current_canvas = display_discrete(self.signal_data[-1], self.plot_frame)
+        self.current_canvas.get_tk_widget().pack(
+            side=tk.TOP, fill=tk.BOTH, expand=False
+        )
 
 
 root = tk.Tk()
