@@ -423,30 +423,33 @@ class DSP:
         )
         self.save_button.grid(row=0, column=7, padx=5, pady=5)
 
-        # task 4
+        # Task 4: Convolution and Signal Processing
         self.task4 = tk.Frame(self.notebook, bg="#f0f0f0")
         self.notebook.add(self.task4, text="Task #4: Convolution")
 
+        # Plot frame for visualizations
         self.plot_frame = tk.Frame(self.task4, bg="#ffffff", bd=2)
         self.plot_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
+        # Control frame for buttons
         self.convolution_frame = tk.Frame(self.task4, bg="#f0f0f0")
         self.convolution_frame.pack(side=tk.BOTTOM, padx=10, pady=10)
 
+        # Buttons for signal processing
         self.load_signal_button = tk.Button(
-            self.convolution_frame,
-            text="Load Signal",
-            command=self.load_signal,
-            width=20,
-            bg="#ab003c",
-            fg="white",
-            relief=tk.FLAT,
+        self.convolution_frame,
+        text="Load Signal",
+        command=self.load_signal,
+        width=20,
+        bg="#ab003c",
+        fg="white",
+        relief=tk.FLAT,
         )
         self.load_signal_button.grid(row=0, column=0, padx=5, pady=5)
 
         self.moving_average_button = tk.Button(
             self.convolution_frame,
-            text="Moving_Avg",
+            text="Moving Average",
             command=self.moving_average,
             width=20,
             bg="#ab003c",
@@ -475,20 +478,44 @@ class DSP:
             fg="white",
             relief=tk.FLAT,
         )
-        self.convolve_button.grid(row=0, column=2, padx=5, pady=5)
+        self.convolve_button.grid(row=0, column=3, padx=5, pady=5)
 
         self.save_button = tk.Button(
             self.convolution_frame,
             text="Save Signal",
+            command=self.save_signal,
             width=20,
             bg="#ab003c",
             fg="white",
-            command=self.save_signal,
             relief=tk.FLAT,
         )
-        self.save_button.grid(row=0, column=7, padx=5, pady=5)
+        self.save_button.grid(row=0, column=4, padx=5, pady=5)
+
+        self.load_test_signal_button = tk.Button(
+            self.convolution_frame,
+            text="Load Test Signal",
+            command=self.load_test_signal_GUI,
+            width=20,
+            bg="#007acc",
+            fg="white",
+            relief=tk.FLAT,
+        )
+        self.load_test_signal_button.grid(row=1, column=0, padx=5, pady=5)
+
+        self.compare_signals_button = tk.Button(
+        self.convolution_frame,
+        text="Compare Signals",
+        command=self.compare_loaded_signals, 
+        width=20,
+        bg="#28a745",
+        fg="white",
+        relief=tk.FLAT,
+        )
+        self.compare_signals_button.grid(row=1, column=1, padx=5, pady=5)
+
 
         self.signal_data = []
+        self.test_signal_data = []
         self.current_canvas = None
         self.current_canvas_left = None
         self.current_canvas_right = None
@@ -574,6 +601,16 @@ class DSP:
         if self.current_canvas:
             self.current_canvas.get_tk_widget().destroy()
 
+    def load_test_signal_GUI(self):
+        """
+        Load the test signal and store it in `self.test_signal_data`.
+        """
+        file_path = filedialog.askopenfilename(
+            title="Select Test Signal File", filetypes=[("Text files", "*.txt")]
+        )
+        if file_path:
+            self.test_signal_data = self.load_test_signal(file_path)
+            messagebox.showinfo("Success", "Test signal loaded successfully!")
     def load_signal(self):
         file_path = filedialog.askopenfilename(filetypes=[("Text files", "*.txt")])
         if file_path:
@@ -798,6 +835,35 @@ class DSP:
 
     # task 4
     # 1-moving_average
+    def load_test_signal(self, file_path):
+        with open(file_path, "r") as file:
+            lines = file.readlines()
+            num_samples = int(lines[2].strip())  # like trim() in JS
+            signal_test_data = [
+                (int(line.split()[0]), float(line.split()[1]))
+                for line in lines[3 : num_samples + 3]
+            ]  # [[(index1, value1), ...]]
+        return signal_test_data
+    def compare_loaded_signals(self):
+        # Ensure both signals are loaded
+        if not self.signal_data or not self.test_signal_data:
+            messagebox.showerror("Error", "Please load both the main signal and the test signal!")
+            return
+        signal_data = self.signal_data[-1] 
+        signal_test_data = self.test_signal_data 
+        # Check For Length :
+        # if len(signal_data) != len(signal_test_data):
+        #     messagebox.showerror("Comparison Result", "Signals have different lengths.")
+        #     return
+
+        # Check if all elements are equal
+        for (index1, value1), (index2, value2) in zip(signal_data, signal_test_data):
+            if index1 != index2 or value1 != value2:
+                messagebox.showerror("Comparison Result", "The signals are not identical.")
+                return
+
+        messagebox.showinfo("Comparison Result", "The signals are identical!")
+
     def moving_average(self):
         if self.signal_data[-1]:
             signal = self.signal_data[-1]
