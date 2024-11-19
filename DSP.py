@@ -455,7 +455,27 @@ class DSP:
         )
         self.moving_average_button.grid(row=0, column=1, padx=5, pady=5)
 
+        self.derivative_button = tk.Button(
+            self.convolution_frame,
+            text="Derivative",
+            command=self.first_derivative,
+            width=20,
+            bg="#ab003c",
+            fg="white",
+            relief=tk.FLAT,
+        )
+        self.derivative_button.grid(row=0, column=2, padx=5, pady=5)
 
+        self.convolve_button = tk.Button(
+            self.convolution_frame,
+            text="Convolve",
+            command=self.convolve,
+            width=20,
+            bg="#ab003c",
+            fg="white",
+            relief=tk.FLAT,
+        )
+        self.convolve_button.grid(row=0, column=2, padx=5, pady=5)
 
         self.save_button = tk.Button(
             self.convolution_frame,
@@ -638,8 +658,6 @@ class DSP:
         else:
             messagebox.showwarning("Warning", "No signal to save.")
 
-    #################################### classFunctions ##################################################
-
     # task 2
     def clear_plots(self):
         if self.current_canvas_left:
@@ -779,11 +797,12 @@ class DSP:
             self.create_quantization_table(data, avg_pow)
 
     # task 4
+    # 1-moving_average
     def moving_average(self):
         if self.signal_data[-1]:
             signal = self.signal_data[-1]
         else:
-            messagebox.showerror("Error", "Load signal first.")
+            messagebox.showerror("Error", "Load signal first!")
             return
         # Initialize the result list
         window_size = simpledialog.askinteger(
@@ -798,9 +817,71 @@ class DSP:
             for j in range(window_size):
                 window_sum += signal[i + j][1]
             # Compute the average and append to the result
-            result.append((i, round((window_sum / window_size),3)))
-        self.signal_data.append( result)
+            result.append((i, round((window_sum / window_size), 3)))
+        self.signal_data.append(result)
         # display_discrete(signal,self.convolution_frame)
+
+    # 2-Derivative
+    def first_derivative(self):
+        if self.signal_data[-1]:
+            signal = self.signal_data[-1]
+        else:
+            messagebox.showerror("Error", "Load signal first!")
+            return
+        result = []
+        for i in range(len(signal)):  # type: ignore
+            if i == 0:
+                continue
+            result.append((i - 1, int(signal[i][1] - signal[i - 1][1])))
+        self.signal_data.append(result)
+
+    # 3- convolution
+    def convolve(self):
+        if (len(self.signal_data) >= 2):
+            x = self.signal_data[-2]
+            h = self.signal_data[-1]
+        else:
+            messagebox.showerror("Error", "Please Enter two signals minimum!")
+
+        lenghth = len(x) + len(h) - 1
+        y =[0] * lenghth
+        res = []
+        n = x[0][0] + h[0][0] - 1
+        # end = n + lenghth
+
+        for i in range(lenghth):
+            n += 1
+            for j in range(len(h)):
+                if i - j >= 0 and i - j < len(x):
+                    y[i] += int(x[i - j][1] * h[j][1])
+            res.append((n,y[i]))
+        self.signal_data[-1] = res
+
+
+
+
+    # def convolve(self):
+        # if (len(self.signal_data) >= 2):
+        #     x = self.signal_data[-2]
+        #     h = self.signal_data[-1]
+        # else:
+        #     messagebox.showerror("Error", "Please Enter two signals minimum!")
+        # y = []
+        # lenghth = len(x) + len(h) - 1
+        # n = x[0][0] + h[0][0]
+        # end = n + lenghth
+        # print(end)
+        # for n in range(lenghth):
+        #     z=0
+        #     for k in range(len(h)):
+        #         # if n-k>=0 and n - k < len(x):
+        #             print("n-k:",n-k , x[n - k][1],"k:",k , h[k][1])
+        #             z += x[n - k + x[0][0]-h[0][0]][1] * h[k][1]
+        #             print(z)
+        #     y.append((n,z))  
+        # print(y)
+
+
 
 
 root = tk.Tk()
